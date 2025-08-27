@@ -5,10 +5,13 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "celery>=5.5.3",
     "django>=5.2.5",
+    "django-celery-results>=2.6.0",
     "easyocr>=1.7.2",
     "numpy>=2.3.2",
     "openai>=1.102.0",
     "opencv-python>=4.11.0.86",
     "pillow>=11.3.0",
+    "redis>=6.4.0",
 ]

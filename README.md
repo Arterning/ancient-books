@@ -18,4 +18,6 @@ uv run manage.py makemigrations books
 uv run manage.py sqlmigrate books 0001
 
 uv run manage.py migrate
+
+uv run celery -A app worker --loglevel=info
 ```

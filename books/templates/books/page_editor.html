@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.book.title }} - 第{{ page.page_number }}页编辑</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+        
+        .image-panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: auto;
+        }
+        
+        .text-panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .page-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            position: relative;
+            cursor: crosshair;
+        }
+        
+        .highlight-overlay {
+            position: absolute;
+            border: 2px solid #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .highlight-overlay.active {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.3);
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        }
+        
+        .text-region {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .text-region:hover {
+            border-color: #4ecdc4;
+            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.2);
+        }
+        
+        .text-region.selected {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+        
+        .region-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .region-id {
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .confidence-score {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+        }
+        
+        .original-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 3px;
+        }
+        
+        .correction-area {
+            margin-top: 10px;
+        }
+        
+        .correction-input {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        .translation-area {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 3px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .translation-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        .action-buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45b7aa;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .toolbar h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- 图片面板 -->
+        <div class="image-panel">
+            <div class="image-container" style="position: relative;">
+                <img id="page-image" class="page-image" src="{{ page.image.url }}" alt="第{{ page.page_number }}页">
+                <div id="highlight-container"></div>
+            </div>
+        </div>
+        
+        <!-- 文本面板 -->
+        <div class="text-panel">
+            <h2>{{ page.book.title }} - 第{{ page.page_number }}页</h2>
+            <div id="text-regions-container">
+                <div class="loading" id="loading">正在加载文本数据...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <h3>操作工具</h3>
+        <button class="btn btn-primary" onclick="translateAllRegions()">批量翻译</button>
+        <button class="btn btn-secondary" onclick="exportData()">导出数据</button>
+        <button class="btn btn-secondary" onclick="saveProgress()">保存进度</button>
+    </div>
+
+    <script>
+        class PageEditor {
+            constructor(pageId) {
+                this.pageId = pageId;
+                this.textRegions = [];
+                this.selectedRegion = null;
+                this.imageScale = 1;
+                
+                this.init();
+            }
+            
+            async init() {
+                await this.loadPageData();
+                this.setupEventListeners();
+                this.renderTextRegions();
+                this.renderImageHighlights();
+            }
+            
+            async loadPageData() {
+                try {
+                    document.getElementById('loading').style.display = 'block';
+                    
+                    const response = await fetch(`/books/page/${this.pageId}/data/`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.textRegions = data.text_regions;
+                    } else {
+                        throw new Error('加载数据失败');
+                    }
+                } catch (error) {
+                    console.error('加载页面数据失败:', error);
+                    alert('加载数据失败，请刷新页面重试');
+                } finally {
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+            
+            setupEventListeners() {
+                // 图片加载完成后计算缩放比例
+                const image = document.getElementById('page-image');
+                image.addEventListener('load', () => {
+                    this.calculateImageScale();
+                });
+                
+                // 窗口大小变化时重新计算缩放比例
+                window.addEventListener('resize', () => {
+                    this.calculateImageScale();
+                    this.updateHighlightPositions();
+                });
+            }
+            
+            calculateImageScale() {
+                const image = document.getElementById('page-image');
+                this.imageScale = image.offsetWidth / image.naturalWidth;
+            }
+            
+            renderTextRegions() {
+                const container = document.getElementById('text-regions-container');
+                container.innerHTML = '';
+                
+                this.textRegions.forEach((region, index) => {
+                    const regionElement = this.createRegionElement(region, index);
+                    container.appendChild(regionElement);
+                });
+            }
+            
+            createRegionElement(region, index) {
+                const div = document.createElement('div');
+                div.className = 'text-region';
+                div.dataset.regionId = region.id;
+                div.dataset.index = index;
+                
+                const correctedText = region.corrected_text || region.original_text;
+                const hasTranslation = region.translated_text && region.translated_text.trim();
+                
+                div.innerHTML = `
+                    <div class="region-header">
+                        <span class="region-id">区域 ${index + 1}</span>
+                        <span class="confidence-score">置信度: ${(region.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="original-text">${region.original_text}</div>
+                    <div class="correction-area">
+                        <textarea class="correction-input" 
+                                  placeholder="在此校对文本..."
+                                  onchange="editor.saveCorrection(${region.id}, this.value)">${correctedText}</textarea>
+                    </div>
+                    ${hasTranslation ? `
+                        <div class="translation-area">
+                            <div class="translation-text">${region.translated_text}</div>
+                        </div>
+                    ` : ''}
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="editor.translateRegion(${region.id})">
+                            ${hasTranslation ? '重新翻译' : '翻译'}
+                        </button>
+                        <button class="btn btn-secondary" onclick="editor.copyText(${index})">复制</button>
+                    </div>
+                `;
+                
+                // 添加点击事件
+                div.addEventListener('click', () => {
+                    this.selectRegion(index);
+                });
+                
+                return div;
+            }
+            
+            renderImageHighlights() {
+                const container = document.getElementById('highlight-container');
+                container.innerHTML = '';
+                
+                this.textRegions.forEach((region, index) => {
+                    const highlight = this.createHighlight(region, index);
+                    container.appendChild(highlight);
+                });
+            }
+            
+            createHighlight(region, index) {
+                const div = document.createElement('div');
+                div.className = 'highlight-overlay';
+                div.dataset.index = index;
+                
+                this.updateHighlightPosition(div, region);
+                
+                // 添加点击事件
+                div.addEventListener('click', () => {
+                    this.selectRegion(index);
+                });
+                
+                return div;
+            }
+            
+            updateHighlightPosition(highlight, region) {
+                const x = region.x * this.imageScale;
+                const y = region.y * this.imageScale;
+                const width = region.width * this.imageScale;
+                const height = region.height * this.imageScale;
+                
+                highlight.style.left = `${x}px`;
+                highlight.style.top = `${y}px`;
+                highlight.style.width = `${width}px`;
+                highlight.style.height = `${height}px`;
+            }
+            
+            updateHighlightPositions() {
+                const highlights = document.querySelectorAll('.highlight-overlay');
+                highlights.forEach((highlight, index) => {
+                    if (this.textRegions[index]) {
+                        this.updateHighlightPosition(highlight, this.textRegions[index]);
+                    }
+                });
+            }
+            
+            selectRegion(index) {
+                // 清除之前的选中状态
+                document.querySelectorAll('.text-region.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                document.querySelectorAll('.highlight-overlay.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // 设置新的选中状态
+                const regionElement = document.querySelector(`[data-index="${index}"]`);
+                const highlightElement = document.querySelector(`.highlight-overlay[data-index="${index}"]`);
+                
+                if (regionElement) {
+                    regionElement.classList.add('selected');
+                    regionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                if (highlightElement) {
+                    highlightElement.classList.add('active');
+                }
+                
+                this.selectedRegion = index;
+            }
+            
+            async saveCorrection(regionId, correctedText) {
+                try {
+                    const response = await fetch(`/books/region/${regionId}/correct/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCsrfToken()
+                        },
+                        body: JSON.stringify({
+                            corrected_text: correctedText,
+                            notes: ''
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error || '保存校对失败');
+                    }
+                    
+                    // 更新本地数据
+                    const region = this.textRegions.find(r => r.id === regionId);
+                    if (region) {
+                        region.corrected_text = correctedText;
+                    }
+                    
+                    this.showMessage('校对已保存', 'success');
+                    
+                } catch (error) {
+                    console.error('保存校对失败:', error);
+                    this.showMessage('保存失败: ' + error.message, 'error');
+                }
+            }
+            
+            async translateRegion(regionId) {
+                try {
+                    this.showMessage('正在翻译...', 'info');
+                    
+                    const response = await fetch(`/books/region/${regionId}/translate/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCsrfToken()
+                        },
+                        body: JSON.stringify({
+                            language: 'zh-cn'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error || '翻译失败');
+                    }
+                    
+                    // 更新本地数据
+                    const region = this.textRegions.find(r => r.id === regionId);
+                    if (region) {
+                        region.translated_text = data.translation;
+                        region.translation_language = 'zh-cn';
+                    }
+                    
+                    // 重新渲染文本区域
+                    this.renderTextRegions();
+                    this.showMessage('翻译完成', 'success');
+                    
+                } catch (error) {
+                    console.error('翻译失败:', error);
+                    this.showMessage('翻译失败: ' + error.message, 'error');
+                }
+            }
+            
+            copyText(index) {
+                const region = this.textRegions[index];
+                const textToCopy = region.corrected_text || region.original_text;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    this.showMessage('文本已复制到剪贴板', 'success');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    this.showMessage('复制失败', 'error');
+                });
+            }
+            
+            getCsrfToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            }
+            
+            showMessage(message, type) {
+                // 简单的消息提示实现
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    padding: 10px 20px;
+                    background: ${type === 'success' ? '#4ecdc4' : type === 'error' ? '#ff6b6b' : '#3498db'};
+                    color: white;
+                    border-radius: 5px;
+                    z-index: 10000;
+                    font-size: 14px;
+                `;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 3000);
+            }
+        }
+        
+        // 全局函数
+        async function translateAllRegions() {
+            if (!confirm('确定要翻译所有文本区域吗？')) return;
+            
+            const regions = editor.textRegions.filter(r => !r.translated_text);
+            
+            for (const region of regions) {
+                await editor.translateRegion(region.id);
+                // 添加延时避免API限制
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        
+        function exportData() {
+            const data = {
+                page_id: editor.pageId,
+                regions: editor.textRegions.map(region => ({
+                    original_text: region.original_text,
+                    corrected_text: region.corrected_text,
+                    translated_text: region.translated_text,
+                    coordinates: {
+                        x: region.x,
+                        y: region.y,
+                        width: region.width,
+                        height: region.height
+                    }
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `page_${editor.pageId}_data.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function saveProgress() {
+            editor.showMessage('进度已自动保存', 'success');
+        }
+        
+        // 初始化编辑器
+        const editor = new PageEditor({{ page.id }});
+    </script>
+</body>
+</html>
