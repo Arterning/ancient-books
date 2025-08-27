@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>书籍列表</title>
+    </head>
+    <body>
+        <h1>书籍列表</h1>
+        <ul>
+            {% for book in books %}
+                <li>
+                    <a>{{ book.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>

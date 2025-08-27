@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字古籍平台 - 新用户注册</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* 保持与其他认证页面一致的古风样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-image: url("https://picsum.photos/id/106/1920/1080");
+            background-size: cover;
+            background-attachment: fixed;
+            background-color: #f5f0e6;
+            font-family: 'Noto Serif SC', serif;
+            color: #3c2a1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(245, 240, 230, 0.95);
+            border: 1px solid #c8b898;
+            box-shadow: 0 4px 20px rgba(60, 42, 30, 0.2);
+            background-image: 
+                linear-gradient(to right, #c8b898 1px, transparent 1px),
+                linear-gradient(to bottom, #c8b898 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 30px;
+            position: relative;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #8b5a2b, transparent);
+        }
+        .title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2.2rem;
+            text-align: center;
+            color: #8b5a2b;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 1px;
+            background-color: #8b5a2b;
+            margin: 10px auto 0;
+        }
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #5c4033;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px 25px;
+        }
+        .form-col {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 10px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            color: #5c4033;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            padding-left: 45px;
+            border: 1px solid #c8b898;
+            border-radius: 2px;
+            background-color: rgba(255, 253, 245, 0.8);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            color: #3c2a1e;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #8b5a2b;
+            box-shadow: 0 0 0 2px rgba(139, 90, 43, 0.1);
+        }
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 42px;
+            color: #8b5a2b;
+            font-size: 1.1rem;
+        }
+        .help-text {
+            font-size: 0.9rem;
+            color: #6d4c2f;
+            margin-top: 5px;
+            padding-left: 45px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .checkbox-group input {
+            margin-right: 10px;
+            width: auto;
+        }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background-color: #8b5a2b;
+            color: #fff;
+            border: none;
+            border-radius: 2px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+        .btn-register:hover {
+            background-color: #6d4c2f;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(60, 42, 30, 0.2);
+        }
+        .btn-register:active {
+            transform: translateY(0);
+        }
+        .link-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .link-group a {
+            color: #8b5a2b;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        .link-group a:hover {
+            color: #6d4c2f;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+        .error-message {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-left: 3px solid #dc3545;
+            font-size: 0.95rem;
+        }
+        .success-message {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-left: 3px solid #28a745;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 576px) {
+            .title {
+                font-size: 1.8rem;
+            }
+            .container {
+                padding: 20px;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+            .form-col {
+                margin-bottom: 25px;
+            }
+            .form-col:last-child {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">新用户注册</h1>
+        
+        <p class="description">
+            欢迎注册数字古籍平台，填写以下信息完成注册
+        </p>
+        
+        {% if form.errors %}
+            <div class="error-message">
+                <i class="fa fa-exclamation-circle"></i>
+                注册信息有误，请检查并修正
+            </div>
+        {% endif %}
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags == 'success' %}success-message{% else %}error-message{% endif %}">
+                    <i class="fa {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <i class="fa fa-user"></i>
+                        <label for="{{ form.username.id_for_label }}">用户名</label>
+                        <input type="text" name="{{ form.username.name }}" 
+                               id="{{ form.username.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="请设置用户名" 
+                               value="{{ form.username.value|default:'' }}"
+                               required>
+                        {% if form.username.errors %}
+                            <div class="error-message" style="margin-top:5px;">
+                                {{ form.username.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="help-text">
+                            用户名用于登录，3-15个字符，可包含字母、数字和下划线
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <i class="fa fa-envelope"></i>
+                        <label for="{{ form.email.id_for_label }}">电子邮箱</label>
+                        <input type="email" name="{{ form.email.name }}" 
+                               id="{{ form.email.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="请输入您的邮箱" 
+                               value="{{ form.email.value|default:'' }}"
+                               required>
+                        {% if form.email.errors %}
+                            <div class="error-message" style="margin-top:5px;">
+                                {{ form.email.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="help-text">
+                            用于密码重置和接收平台通知
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <i class="fa fa-lock"></i>
+                        <label for="{{ form.password1.id_for_label }}">设置密码</label>
+                        <input type="password" name="{{ form.password1.name }}" 
+                               id="{{ form.password1.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="请设置密码" 
+                               required>
+                        {% if form.password1.errors %}
+                            <div class="error-message" style="margin-top:5px;">
+                                {{ form.password1.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="help-text">
+                            密码至少8位，需包含字母和数字，不能过于简单
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <i class="fa fa-lock"></i>
+                        <label for="{{ form.password2.id_for_label }}">确认密码</label>
+                        <input type="password" name="{{ form.password2.name }}" 
+                               id="{{ form.password2.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="请再次输入密码" 
+                               required>
+                        {% if form.password2.errors %}
+                            <div class="error-message" style="margin-top:5px;">
+                                {{ form.password2.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="agree_terms" name="agree_terms" required>
+                <label for="agree_terms">
+                    我已阅读并同意<a href="{% url 'terms' %}" style="color:#8b5a2b;">《用户服务条款》</a>和<a href="{% url 'privacy' %}" style="color:#8b5a2b;">《隐私政策》</a>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-register">
+                <i class="fa fa-user-plus"></i> 完成注册
+            </button>
+        </form>
+        
+        <div class="link-group">
+            <span>已有账号？</span>
+            <a href="{% url 'login' %}"><i class="fa fa-sign-in"></i> 立即登录</a>
+        </div>
+    </div>
+</body>
+</html>
