@@ -1,15 +1,521 @@
-<html>
-    <head>
-        <title>书籍列表</title>
-    </head>
-    <body>
-        <h1>书籍列表</h1>
-        <ul>
+<!-- templates/books/book_list.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古籍管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ancient-gold': '#d4af37',
+                        'ancient-red': '#8b0000',
+                        'paper': '#fdf6e3',
+                        'ink': '#2c3e50'
+                    },
+                    fontFamily: {
+                        'chinese': ['Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .book-card {
+            background: linear-gradient(135deg, #fdf6e3 0%, #f4f1e8 100%);
+            border: 1px solid #e6d7b7;
+            transition: all 0.3s ease;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #d4af37;
+        }
+        
+        .upload-area {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen font-chinese">
+    
+    <!-- 顶部导航 -->
+    <nav class="bg-white shadow-lg border-b-2 border-ancient-gold">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-ancient-red">📚 古籍管理系统</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700">欢迎，{{ user.username }}</span>
+                    <button onclick="showCreateBookModal()" class="bg-ancient-gold hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span>新建古籍</span>
+                    </button>
+                    <a href="/admin/" class="text-gray-600 hover:text-gray-800 transition duration-200">管理后台</a>
+                    <a href="/logout/" class="text-red-600 hover:text-red-800 transition duration-200">退出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- 页面标题和统计 -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-ink">我的古籍收藏</h2>
+                    <p class="text-gray-600 mt-2">共收录 {{ books.count }} 部古籍典藏</p>
+                </div>
+                
+                <!-- 搜索和筛选 -->
+                <div class="flex space-x-4">
+                    <div class="relative">
+                        <input type="text" 
+                               id="searchInput"
+                               placeholder="搜索书名或作者..."
+                               class="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent"
+                               onkeyup="filterBooks()">
+                        <svg class="absolute right-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    
+                    <select id="dynastyFilter" onchange="filterBooks()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent">
+                        <option value="">所有朝代</option>
+                        <option value="唐">唐代</option>
+                        <option value="宋">宋代</option>
+                        <option value="元">元代</option>
+                        <option value="明">明代</option>
+                        <option value="清">清代</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 书籍网格 -->
+        <div id="booksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for book in books %}
-                <li>
-                    <a>{{ book.title }}</a>
-                </li>
+            <div class="book-card rounded-xl p-6 cursor-pointer" 
+                 data-title="{{ book.title|lower }}" 
+                 data-author="{{ book.author|lower }}" 
+                 data-dynasty="{{ book.dynasty }}"
+                 onclick="window.location.href='/books/book/{{ book.id }}/'">
+                
+                <!-- 书籍封面区域 -->
+                <div class="mb-4">
+                    {% if book.pages.first %}
+                        <img src="{{ book.pages.first.image.url }}" 
+                             alt="{{ book.title }}" 
+                             class="w-full h-48 object-cover rounded-lg shadow-md">
+                    {% else %}
+                        <div class="w-full h-48 bg-gradient-to-br from-ancient-gold/20 to-ancient-red/20 rounded-lg shadow-md flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 mx-auto text-ancient-gold mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                </svg>
+                                <p class="text-sm text-ancient-red">待上传页面</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- 书籍信息 -->
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-ink line-clamp-2">{{ book.title }}</h3>
+                    
+                    {% if book.author %}
+                        <p class="text-sm text-gray-600">
+                            <span class="inline-flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                {{ book.author }}
+                            </span>
+                        </p>
+                    {% endif %}
+                    
+                    {% if book.dynasty %}
+                        <span class="inline-block px-2 py-1 bg-ancient-gold/20 text-ancient-red text-xs rounded-full">
+                            {{ book.dynasty }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- 书籍统计 -->
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                            </svg>
+                            {{ book.pages.count }} 页
+                        </span>
+                        <span class="flex items-center">
+                            {% if book.pages.count > 0 %}
+                                {% with ocr_completed=book.pages.filter|length %}
+                                <svg class="w-4 h-4 mr-1 {% if book.pages.filter.count == book.pages.count %}text-green-500{% else %}text-yellow-500{% endif %}" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+                                </svg>
+                                处理中
+                                {% endwith %}
+                            {% else %}
+                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                                </svg>
+                                未处理
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 最后更新时间 -->
+                <div class="mt-2 text-xs text-gray-400">
+                    更新于 {{ book.updated_at|date:"Y-m-d H:i" }}
+                </div>
+            </div>
+            {% empty %}
+            
+            <!-- 空状态 -->
+            <div class="col-span-full">
+                <div class="text-center py-16">
+                    <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    <h3 class="text-xl font-medium text-gray-700 mb-2">还没有古籍收藏</h3>
+                    <p class="text-gray-500 mb-6">开始您的数字化古籍收藏之旅吧</p>
+                    <button onclick="showCreateBookModal()" class="bg-ancient-gold hover:bg-yellow-600 text-white px-6 py-3 rounded-lg transition duration-200">
+                        创建第一部古籍
+                    </button>
+                </div>
+            </div>
             {% endfor %}
-        </ul>
-    </body>
+        </div>
+    </div>
+
+    <!-- 创建古籍模态框 -->
+    <div id="createBookModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <form id="createBookForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- 模态框头部 -->
+                <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-ink">新建古籍</h3>
+                    <button type="button" onclick="hideCreateBookModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- 模态框内容 -->
+                <div class="p-6 space-y-6">
+                    <!-- 基本信息 -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-medium text-ink">基本信息</h4>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">书名 *</label>
+                            <input type="text" name="title" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent"
+                                   placeholder="请输入古籍书名">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">作者</label>
+                                <input type="text" name="author"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent"
+                                       placeholder="请输入作者姓名">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">朝代</label>
+                                <select name="dynasty" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent">
+                                    <option value="">请选择朝代</option>
+                                    <option value="先秦">先秦</option>
+                                    <option value="秦">秦代</option>
+                                    <option value="汉">汉代</option>
+                                    <option value="三国">三国</option>
+                                    <option value="晋">晋代</option>
+                                    <option value="南北朝">南北朝</option>
+                                    <option value="隋">隋代</option>
+                                    <option value="唐">唐代</option>
+                                    <option value="五代十国">五代十国</option>
+                                    <option value="宋">宋代</option>
+                                    <option value="元">元代</option>
+                                    <option value="明">明代</option>
+                                    <option value="清">清代</option>
+                                    <option value="近代">近代</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">描述</label>
+                            <textarea name="description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent"
+                                      placeholder="请输入古籍描述或简介"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- 文件上传 -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-medium text-ink">页面图片</h4>
+                        
+                        <div class="upload-area rounded-lg p-8 text-center" 
+                             ondrop="handleDrop(event)" 
+                             ondragover="handleDragOver(event)"
+                             ondragleave="handleDragLeave(event)"
+                             onclick="document.getElementById('fileInput').click()">
+                            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <p class="text-lg font-medium text-gray-700 mb-2">点击上传或拖拽文件到此处</p>
+                            <p class="text-sm text-gray-500">支持 JPG、PNG、TIFF 格式，单个文件不超过50MB</p>
+                            <input type="file" id="fileInput" name="pages" multiple accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                        </div>
+                        
+                        <!-- 文件预览列表 -->
+                        <div id="filePreview" class="hidden space-y-2 max-h-64 overflow-y-auto">
+                            <h5 class="font-medium text-gray-700">已选择的文件：</h5>
+                            <div id="fileList" class="space-y-2"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">起始页码</label>
+                                <input type="number" name="start_page_number" value="1" min="1"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ancient-gold focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 模态框底部 -->
+                <div class="flex justify-end space-x-4 p-6 border-t border-gray-200">
+                    <button type="button" onclick="hideCreateBookModal()" 
+                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                        取消
+                    </button>
+                    <button type="submit" id="submitBtn"
+                            class="px-6 py-2 bg-ancient-gold hover:bg-yellow-600 text-white rounded-lg transition duration-200 flex items-center space-x-2">
+                        <span>创建古籍</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-8 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-ancient-gold mx-auto mb-4"></div>
+            <p class="text-lg font-medium text-ink">正在创建古籍...</p>
+            <p class="text-sm text-gray-600 mt-2">请稍候，系统正在处理您上传的图片</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        
+        // 显示创建古籍模态框
+        function showCreateBookModal() {
+            document.getElementById('createBookModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 隐藏创建古籍模态框
+        function hideCreateBookModal() {
+            document.getElementById('createBookModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            document.getElementById('createBookForm').reset();
+            selectedFiles = [];
+            updateFilePreview();
+        }
+        
+        // 处理拖放
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+        
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files);
+            addFiles(files);
+        }
+        
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            addFiles(files);
+        }
+        
+        // 添加文件到列表
+        function addFiles(files) {
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    selectedFiles.push(file);
+                }
+            });
+            updateFilePreview();
+        }
+        
+        // 更新文件预览
+        function updateFilePreview() {
+            const preview = document.getElementById('filePreview');
+            const fileList = document.getElementById('fileList');
+            
+            if (selectedFiles.length === 0) {
+                preview.classList.add('hidden');
+                return;
+            }
+            
+            preview.classList.remove('hidden');
+            fileList.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between p-2 bg-gray-50 rounded border';
+                fileItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                        <span class="text-sm font-medium">${file.name}</span>
+                        <span class="text-xs text-gray-500">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                    <button type="button" onclick="removeFile(${index})" class="text-red-500 hover:text-red-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+        
+        // 删除文件
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFilePreview();
+        }
+        
+        // 筛选书籍
+        function filterBooks() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const dynastyFilter = document.getElementById('dynastyFilter').value;
+            const bookCards = document.querySelectorAll('.book-card[data-title]');
+            
+            bookCards.forEach(card => {
+                const title = card.dataset.title;
+                const author = card.dataset.author;
+                const dynasty = card.dataset.dynasty;
+                
+                const matchesSearch = !searchTerm || 
+                    title.includes(searchTerm) || 
+                    author.includes(searchTerm);
+                    
+                const matchesDynasty = !dynastyFilter || dynasty === dynastyFilter;
+                
+                if (matchesSearch && matchesDynasty) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // 提交表单
+        document.getElementById('createBookForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (selectedFiles.length === 0) {
+                alert('请至少上传一张页面图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            const formElements = new FormData(this);
+            
+            // 添加表单数据
+            for (let [key, value] of formElements) {
+                if (key !== 'pages') {
+                    formData.append(key, value);
+                }
+            }
+            
+            // 添加文件
+            selectedFiles.forEach(file => {
+                formData.append('pages', file);
+            });
+            
+            try {
+                // 显示加载提示
+                document.getElementById('loadingModal').classList.remove('hidden');
+                
+                // 先创建书籍
+                const createResponse = await fetch('/books/create/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await createResponse.json();
+                
+                if (result.success) {
+                    // 刷新页面
+                    window.location.reload();
+                } else {
+                    throw new Error(result.error || '创建失败');
+                }
+                
+            } catch (error) {
+                console.error('创建古籍失败:', error);
+                alert('创建失败: ' + error.message);
+            } finally {
+                document.getElementById('loadingModal').classList.add('hidden');
+            }
+        });
+        
+        // 点击模态框外部关闭
+        document.getElementById('createBookModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideCreateBookModal();
+            }
+        });
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideCreateBookModal();
+            }
+        });
+    </script>
+</body>
 </html>

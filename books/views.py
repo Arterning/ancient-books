@@ -242,3 +242,100 @@ def check_ocr_status(request, page_id):
         'confidence': page.ocr_confidence
     })
 
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def create_book(request):
+    """创建新的古籍"""
+    try:
+        # 获取表单数据
+        title = request.POST.get('title', '').strip()
+        author = request.POST.get('author', '').strip()
+        dynasty = request.POST.get('dynasty', '').strip()
+        description = request.POST.get('description', '').strip()
+        start_page_number = int(request.POST.get('start_page_number', 1))
+        
+        if not title:
+            return JsonResponse({
+                'success': False,
+                'error': '书名不能为空'
+            }, status=400)
+        
+        # 创建书籍
+        book = Book.objects.create(
+            title=title,
+            author=author,
+            dynasty=dynasty,
+            description=description,
+            created_by=request.user
+        )
+        
+        # 处理上传的页面图片
+        files = request.FILES.getlist('pages')
+        if not files:
+            return JsonResponse({
+                'success': False,
+                'error': '请至少上传一张页面图片'
+            }, status=400)
+        
+        created_pages = []
+        page_number = start_page_number
+        
+        for file in files:
+            # 验证文件类型
+            if not file.content_type.startswith('image/'):
+                continue
+                
+            # 创建书页
+            page = BookPage.objects.create(
+                book=book,
+                page_number=page_number,
+                image=file,
+                ocr_status='pending'
+            )
+            
+            # 创建OCR任务
+            ocr_task = OCRTask.objects.create(page=page)
+            
+            # 异步处理OCR
+            from .tasks import process_ocr_task
+            process_ocr_task.delay(ocr_task.id)
+            
+            created_pages.append({
+                'id': page.id,
+                'page_number': page.page_number,
+                'image_url': page.image.url,
+                'ocr_status': page.ocr_status
+            })
+            
+            page_number += 1
+        
+        logger.info(f"创建古籍成功: {book.title}, 用户: {request.user.username}, 页数: {len(created_pages)}")
+        
+        return JsonResponse({
+            'success': True,
+            'book': {
+                'id': book.id,
+                'title': book.title,
+                'author': book.author,
+                'dynasty': book.dynasty,
+                'description': book.description,
+                'pages_count': len(created_pages)
+            },
+            'pages': created_pages
+        })
+        
+    except ValueError as e:
+        logger.error(f"创建古籍参数错误: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': '参数格式错误'
+        }, status=400)
+        
+    except Exception as e:
+        logger.error(f"创建古籍失败: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'创建失败: {str(e)}'
+        }, status=500)
