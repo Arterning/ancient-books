@@ -14,13 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.views import LoginView, PasswordResetView
+from django.contrib.auth.views import LoginView, PasswordResetView, TemplateView
 from .views import RegisterView, profile_view, terms_view, privacy_view, change_password_view
 
 urlpatterns = [
+    # 首页路由：访问网站根目录时，渲染 index.html
+    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+
     path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     # 登出
     path('logout/', 
@@ -72,5 +77,5 @@ urlpatterns = [
     path('privacy/', privacy_view, name='privacy'),
 
     path('admin/', admin.site.urls),
-    path("", include("books.urls")),
-]
+    path('books/', include("books.urls")),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
