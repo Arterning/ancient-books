@@ -1,0 +1,41 @@
+<section class="relative bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/home_banner_bg.226c968d.png')] bg-no-repeat bg-cover box-border -mt-20">
+    <div class="relative box-border">
+      <div class="relative box-border inline-block h-0 min-w-[1497px] translate-x-[-50.0%] w-[129.028%] z-[1] ml-[50%] pt-[62.5%]">
+        <img src="https://c.animaapp.com/meqfmvr2qCnX0o/assets/home_bg.c6f24b0c.jpg" alt="" class="absolute box-border h-[calc(100%_+_2px)] w-full left-0 top-0" />
+        <div class="absolute box-border h-full w-full left-0 top-0">
+          <div class="absolute box-border h-full w-full z-[100] left-0 top-0">
+            <div class="absolute box-border h-full translate-x-[-50.0%] w-[77.503%] z-[-1] left-[49.75%] top-0">
+              <div class="relative bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/1.e6c544fc.png')] bg-contain box-border h-full w-full"></div>
+            </div>
+  
+            {# ==== heroBooks 循环 ==== #}
+            {% for book in heroBooks %}
+              <div>
+                <div class="{{ book.positionClass }}">
+                  <div class="relative box-border inline-block z-[1]">
+                    <div class="relative bg-no-repeat bg-contain box-border w-full z-[100]">
+                      <img src="{{ book.image }}" alt="{{ book.title }}" class="box-border w-full" />
+                    </div>
+                  </div>
+                  <a href="{{ book.href }}" class="absolute box-border block h-[calc(100%_+_8px)] w-full z-[105] left-0 top-0"></a>
+                </div>
+                <h3 class="{{ book.titleClass }}">{{ book.title }}</h3>
+              </div>
+            {% endfor %}
+  
+            <div class="absolute bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/tab_back.68def28e.png')] bg-no-repeat bg-size-[100%_100%] box-border h-12 text-nowrap translate-x-[-50.0%] w-[928px] z-[101] bg-center left-2/4 top-[89.1111%]">
+              <div class="absolute bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/tab_active_bar.0d298497.png')] bg-no-repeat bg-cover box-border h-12 text-nowrap w-[235px] bg-center left-0 top-0"></div>
+              <div class="absolute bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/tab_back_outline.13353441.png')] bg-no-repeat bg-size-[100%_100%] box-border h-[52px] text-nowrap translate-x-[-50.0%] w-[934px] bg-center left-2/4 -top-0.5"></div>
+  
+              {# ==== heroCategories 循环 ==== #}
+              {% for category in heroCategories %}
+                <h2 class="{{ category.className }}">{{ category.label }}</h2>
+              {% endfor %}
+            </div>
+  
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  

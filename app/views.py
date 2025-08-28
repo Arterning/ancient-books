@@ -86,3 +86,10 @@ def terms_view(request):
 def privacy_view(request):
     """隐私政策页面"""
     return render(request, 'privacy.html')
+
+def home_view(request):
+    from .data import heroBooks, heroCategories
+    return render(request, 'index.html', {
+        'heroBooks': heroBooks,
+        'heroCategories': heroCategories
+    })

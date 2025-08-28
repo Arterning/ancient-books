@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>古籍管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                    fontFamily: {
+                        sans: [
+                            "ui-sans-serif",
+                            "system-ui",
+                            "sans-serif",
+                            '"Apple Color Emoji"',
+                            '"Segoe UI Emoji"',
+                            '"Segoe UI Symbol"',
+                            '"Noto Color Emoji"',
+                        ],
+                        "Source Han Serif": ["Source Han Serif"]
+                    },
+                    keyframes: {
+                        "accordion-down": {
+                            from: { height: "0" },
+                            to: { height: "var(--radix-accordion-content-height)" },
+                        },
+                        "accordion-up": {
+                            from: { height: "var(--radix-accordion-content-height)" },
+                            to: { height: "0" },
+                        },
+                    },
+                    animation: {
+                        "accordion-down": "accordion-down 0.2s ease-out",
+                        "accordion-up": "accordion-up 0.2s ease-out",
+                    },
+                },
+                container: { center: true, padding: "2rem", screens: { "2xl": "1400px" } },
+            },
+            plugins: [],
+            darkMode: ["class"],
+        }
+    </script>
+</head>
+
+<body>
+    <div
+        class="text-black text-sm not-italic normal-nums font-normal accent-auto box-border block h-full tracking-[normal] leading-[14px] list-outside list-disc text-start indent-[0px] normal-case visible border-separate font-source_han_serif">
+        <div class="box-border h-full">
+            <div class="box-border h-full min-w-[1440px] overflow-x-hidden overflow-y-auto w-screen">
+                <div class="relative box-border">
+                    <div class="box-border w-full"></div>
+                    <div
+                        class="sticky shadow-[rgba(0,0,0,0.02)_0px_4px_10px_0px] box-border h-20 z-[99] top-0 inset-x-0">
+                        <div
+                            class="absolute bg-stone-50 shadow-[rgba(0,0,0,0.02)_0px_4px_10px_0px] box-border content-[''] opacity-100 z-[-1] inset-0 md:opacity-0">
+                            <div
+                                class="absolute items-center bg-gray-300 box-border flex h-[0.5px] bottom-0 inset-x-0">
+                                <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -left-0.5"></div>
+                                <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -right-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="box-border h-full">
+                            {% include "index/navbar.html" %}
+                        </div>
+                    </div>
+                    {% include "index/hero.html" %}
+                    {% include "index/search.html" %}
+                    <FeaturedCollections />
+                    <CarouselSection />
+                    <ThreePanelSection />
+                    <div class="relative items-center bg-zinc-400 box-border flex h-[0.5px]">
+                        <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -left-0.5"></div>
+                        <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -right-0.5"></div>
+                    </div>
+                    <section class="bg-stone-200 box-border">
+                        <div class="box-border flex max-w-[1160px] mx-auto">
+                            <div class="text-zinc-900 box-border flex basis-6/12 flex-col grow pt-[75px] pb-[79px]">
+                                <div class="text-xl font-semibold box-border leading-[29px]">Built by</div>
+                                <ul class="items-end box-border flex list-none pl-0">
+                                    <li class="box-border text-left mt-6">
+                                        <img src="https://c.animaapp.com/meqfmvr2qCnX0o/assets/open_library_for_digital_humanities.png"
+                                            alt="Peking University - ByteDance Open Lab for Digital Humanities"
+                                            class="box-border w-[364px]" />
+                                        <div
+                                            class="text-xl font-medium box-border tracking-[1px] leading-[29px] mt-5">
+                                            Peking University - ByteDance Open Lab for Digital Humanities</div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div
+                                class="relative items-center self-stretch bg-zinc-400 box-border flex flex-col w-[0.5px]">
+                                <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -top-0.5"></div>
+                                <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -bottom-0.5"></div>
+                            </div>
+                            <div
+                                class="text-zinc-700 text-xs font-semibold items-center box-border flex justify-end leading-[22px] text-center pl-[140px]">
+                                <div class="items-center box-border flex flex-col">
+                                    <div
+                                        class="bg-[url('https://lf-welfare.amemv.com/obj/douyin-welfare-image/guji/shidian/static/image/feedback-wx-qrcode.a8ce8310.png')] bg-cover box-border h-[111px] w-[111px]">
+                                    </div>
+                                    <div class="font-bold box-border flex flex-col h-11 leading-4 w-[156px] mt-1">
+                                        <div class="box-border">
+                                            <a href="https://bytedance.larkoffice.com/share/base/form/shrcniR8yBffiIJC4QwKVJASSHd?prefill_source=pc_undefined&hide_source=1"
+                                                class="text-blue-800 font-semibold box-border leading-[22px]">Let us
+                                                know</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="relative items-center bg-zinc-400 box-border flex h-[0.5px]">
+                        <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -left-0.5"></div>
+                        <div class="absolute bg-zinc-400 box-border h-1 w-1 rounded-sm -right-0.5"></div>
+                    </div>
+                    <Footer />
+                </div>
+            </div>
+            <div class="box-border hidden">
+                <div class="box-border">
+                    <div class="box-border">
+                        <div class="box-border">Log in for a better reading experience</div>
+                        <div class="box-border">
+                            <img src="https://c.animaapp.com/meqfmvr2qCnX0o/assets/icon-15.svg" alt="Icon"
+                                class="box-border h-[25px] w-[25px]" />
+                        </div>
+                    </div>
+                    <div class="box-border"></div>
+                </div>
+            </div>
+        </div>
+        <div class="relative box-border"></div>
+    </div>
+</body>
+
+</html>

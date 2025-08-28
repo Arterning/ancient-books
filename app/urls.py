@@ -20,11 +20,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView, PasswordResetView, TemplateView
-from .views import RegisterView, profile_view, terms_view, privacy_view, change_password_view
+from .views import home_view, RegisterView, profile_view, terms_view, privacy_view, change_password_view
 
 urlpatterns = [
     # 首页路由：访问网站根目录时，渲染 index.html
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('', home_view, name='home'),
 
     path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     # 登出
