@@ -22,6 +22,13 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView, PasswordResetView, TemplateView
 from .views import home_view, RegisterView, profile_view, terms_view, privacy_view, change_password_view
 
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_URL = '/book_pages/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'book_pages')
+
 urlpatterns = [
     # 首页路由：访问网站根目录时，渲染 index.html
     path('', home_view, name='home'),
@@ -78,4 +85,4 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('books/', include("books.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
